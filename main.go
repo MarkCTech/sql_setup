@@ -8,12 +8,17 @@ import (
 )
 
 type Task struct {
+	Id        int    `json:"id"`
 	Title     string `json:"title"`
-	Completed string `json:"completed"`
+	Completed bool   `json:"completed"`
 }
 
 type Input struct {
-	Title string
+	Task
+}
+
+type Returned struct {
+	Task
 }
 
 func main() {
@@ -27,42 +32,77 @@ func main() {
 	}
 	// defer the close till after the main function has finished
 	defer db.Close()
-	fmt.Println("Succesfully connected to MySQL database on :3306")
+	fmt.Println("\nSuccesfully connected to MySQL database on :3306")
 
 	var i Input
-	InputTask(&i)
-	AddTask(*db, i.Title)
-	GetTasks(*db)
+	var r Returned
+	InputTask(*db, &i)
+	AddTask(*db, &i)
+	GetTaskbyTitle(*db, &i, &r)
+	ReturnToInput(&r, &i)
+
+	CompleteTask(*db, &i)
+	GetAllTasks(*db)
 }
 
-func InputTask(i *Input) {
-	fmt.Println("Enter title of task:")
+func InputTask(db sql.DB, i *Input) {
+	fmt.Print("\nEnter title of task: ")
 	fmt.Scanln(&i.Title)
 }
 
-func GetTasks(db sql.DB) {
-	results, err := db.Query("SELECT title FROM tasks")
+func ReturnToInput(r *Returned, i *Input) {
+	i.Id = r.Id
+	i.Title = r.Title
+	i.Completed = r.Completed
+}
+
+func GetTaskbyTitle(db sql.DB, i *Input, r *Returned) {
+	resultId, err := db.Query("SELECT * FROM tasks WHERE title = (?)", &i.Title)
 	if err != nil {
 		panic(err.Error())
 	}
-
-	fmt.Println("Retrieved these tasks:")
-	for results.Next() {
-		var task Task
-		err = results.Scan(&task.Title)
+	for resultId.Next() {
+		err = resultId.Scan(&r.Id, &r.Title, &r.Completed)
 		if err != nil {
 			panic(err.Error())
 		}
-		fmt.Println(task.Title, task.Completed)
 	}
+	fmt.Printf("\nRetrieved these tasks where title is: %s\n\n", i.Title)
+	fmt.Println(r.Id, r.Title, r.Completed)
 }
 
-func AddTask(db sql.DB, intitle string) {
-	insert, err := db.Query("INSERT INTO tasks (title,completed) VALUES(?,false)", intitle)
+func GetAllTasks(db sql.DB) {
+	results, err := db.Query("SELECT * FROM tasks")
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Printf("\nRetrieved these tasks:\n\n")
+	for results.Next() {
+		var task Task
+		err = results.Scan(&task.Id, &task.Title, &task.Completed)
+		if err != nil {
+			panic(err.Error())
+		}
+		fmt.Println(task.Id, task.Title, task.Completed)
+	}
+	fmt.Print("\n")
+}
 
+func AddTask(db sql.DB, i *Input) {
+	insert, err := db.Query("INSERT INTO tasks (title,completed) VALUES(?,false)", i.Title)
 	if err != nil {
 		panic(err.Error())
 	}
 	defer insert.Close()
-	fmt.Println("Succesfully inserted into tasks")
+	fmt.Printf("\nSuccesfully inserted: %v\n", i.Title)
+}
+
+func CompleteTask(db sql.DB, i *Input) {
+	i.Completed = true
+	insert, err := db.Query("UPDATE tasks SET completed = (?) WHERE id = (?)", i.Completed, i.Id)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer insert.Close()
+	fmt.Printf("\nSuccesfully completed task at ID: %v\n", i.Id)
 }
