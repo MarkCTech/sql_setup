@@ -8,8 +8,8 @@ import (
 	"time"
 )
 
-func dbstart() *sql.DB {
-	db, err := sql.Open("mysql", dsn(""))
+func Dbstart() *sql.DB {
+	db, err := sql.Open("mysql", Dsn(""))
 	if err != nil {
 		log.Printf("Error %s when opening DB\n", err)
 	}
@@ -29,7 +29,7 @@ func dbstart() *sql.DB {
 	log.Printf("rows affected %d\n", no)
 
 	db.Close()
-	db, err = sql.Open("mysql", dsn(dbname))
+	db, err = sql.Open("mysql", Dsn(dbname))
 	if err != nil {
 		log.Printf("Error %s when opening DB", err)
 	}
@@ -53,6 +53,6 @@ func CreateTable(db sql.DB, tableName string) {
 	db.Query(fmt.Sprintf("INSERT INTO %v (title) VALUES ('test')", tableName))
 }
 
-func dsn(dbName string) string {
+func Dsn(dbName string) string {
 	return fmt.Sprintf("%s:%s@tcp(%s)/%s", username, password, hostname, dbName)
 }

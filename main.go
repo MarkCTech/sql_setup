@@ -31,9 +31,9 @@ const (
 	dbname   = "todosdb"
 )
 
-func startdb() {
-	StartedDb := dbstart()
+func StartCrudin1() {
+	StartedDb := Dbstart()
 	defer StartedDb.Close()
 	CrudDb = StartedDb
-	crudin1()
+	Crudin1()
 }

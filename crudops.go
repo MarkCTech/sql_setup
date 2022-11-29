@@ -7,7 +7,7 @@ import (
 
 var CrudDb *sql.DB
 
-func crudin1() {
+func Crudin1() {
 
 	var i Input
 	var r Returned
