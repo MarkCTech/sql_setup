@@ -1,4 +1,4 @@
-package main
+package sql_db
 
 import (
 	"context"

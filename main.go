@@ -1,4 +1,4 @@
-package main
+package sql_db
 
 import (
 	"database/sql"
@@ -31,7 +31,7 @@ const (
 	dbname   = "todosdb"
 )
 
-func main() {
+func startdb() {
 	StartedDb := dbstart()
 	defer StartedDb.Close()
 	CrudDb = StartedDb
