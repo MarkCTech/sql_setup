@@ -6,6 +6,15 @@ import (
 	"fmt"
 	"log"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+const (
+	username = "root"
+	password = "toor"
+	hostname = "127.0.0.1:3306"
+	dbname   = "todosdb"
 )
 
 func Dbstart() *sql.DB {
