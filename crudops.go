@@ -5,13 +5,10 @@ import (
 	"fmt"
 )
 
-var CrudDb *sql.DB
-
-func Crudin1() {
-
+func Crudin1(CrudDb *sql.DB) {
 	var i Input
 	var r Returned
-	InputTask(CrudDb, &i)
+	InputTask(&i)
 	AddTask(CrudDb, &i)
 	GetTaskbyTitle(CrudDb, &i, &r)
 	ReturnToInput(&r, &i)
@@ -22,7 +19,7 @@ func Crudin1() {
 	GetAllTasks(CrudDb)
 }
 
-func InputTask(db *sql.DB, i *Input) {
+func InputTask(i *Input) {
 	fmt.Print("\nEnter title of task: ")
 	fmt.Scanln(&i.Title)
 }

@@ -34,6 +34,5 @@ const (
 func StartCrudin1() {
 	StartedDb := Dbstart()
 	defer StartedDb.Close()
-	CrudDb = StartedDb
-	Crudin1()
+	Crudin1(StartedDb)
 }
