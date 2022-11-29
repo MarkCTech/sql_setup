@@ -18,6 +18,8 @@ func crudin1() {
 
 	CompleteTask(CrudDb, &i)
 	GetAllTasks(CrudDb)
+	DeleteTask(CrudDb, &i)
+	GetAllTasks(CrudDb)
 }
 
 func InputTask(db *sql.DB, i *Input) {
@@ -70,6 +72,15 @@ func AddTask(db *sql.DB, i *Input) {
 	}
 	defer insert.Close()
 	fmt.Printf("\nSuccesfully inserted: %v\n", i.Title)
+}
+
+func DeleteTask(db *sql.DB, i *Input) {
+	delete, err := db.Query("DELETE FROM tasks WHERE id = (?)", i.Id)
+	if err != nil {
+		panic(err.Error())
+	}
+	defer delete.Close()
+	fmt.Printf("\nSuccesfully completed task at ID: %v\n", i.Id)
 }
 
 func CompleteTask(db *sql.DB, i *Input) {
