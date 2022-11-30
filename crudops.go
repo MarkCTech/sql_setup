@@ -56,7 +56,7 @@ func Count(db *sql.DB) int {
 }
 
 func GetTaskbyTitle(db *sql.DB, i *Task, r *Task) {
-	resultId, err := db.Query("SELECT * FROM tasks WHERE title = (?)", &i.Title)
+	resultId, err := db.Query("SELECT * FROM tasks WHERE title IS NOT NULL AND title = (?)", &i.Title)
 	if err != nil {
 		panic(err.Error())
 	}
@@ -71,13 +71,13 @@ func GetTaskbyTitle(db *sql.DB, i *Task, r *Task) {
 }
 
 func GetAllTasks(db *sql.DB) []Task {
-	results, err := db.Query("SELECT * FROM tasks")
+	results, err := db.Query("SELECT * FROM tasks WHERE id IS NOT NULL")
 	if err != nil {
 		panic(err.Error())
 	}
-	count := Count(db)
+	// count := Count(db)
 	fmt.Printf("\nRetrieved these tasks:\n\n")
-	alltasks := make([]Task, count)
+	var alltasks []Task
 	for results.Next() {
 		var task Task
 		err = results.Scan(&task.Id, &task.Title, &task.Completed)
@@ -86,7 +86,6 @@ func GetAllTasks(db *sql.DB) []Task {
 		}
 		fmt.Println(task.Id, task.Title, task.Completed)
 		alltasks = append(alltasks, task)
-
 	}
 	fmt.Print("\n")
 	return alltasks
