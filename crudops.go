@@ -3,6 +3,7 @@ package sql_db
 import (
 	"database/sql"
 	"fmt"
+	"log"
 )
 
 type Task struct {
@@ -36,6 +37,24 @@ func ReturnToInput(r *Task, i *Task) {
 	i.Completed = r.Completed
 }
 
+func Count(db *sql.DB) int {
+	rows, err := db.Query("SELECT COUNT(*) FROM tasks")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var count int
+
+	for rows.Next() {
+		if err := rows.Scan(&count); err != nil {
+			log.Fatal(err)
+		}
+	}
+	fmt.Printf("Number of rows are %v\n", count)
+	return count
+}
+
 func GetTaskbyTitle(db *sql.DB, i *Task, r *Task) {
 	resultId, err := db.Query("SELECT * FROM tasks WHERE title = (?)", &i.Title)
 	if err != nil {
@@ -51,12 +70,14 @@ func GetTaskbyTitle(db *sql.DB, i *Task, r *Task) {
 	fmt.Println(r.Id, r.Title, r.Completed)
 }
 
-func GetAllTasks(db *sql.DB) {
+func GetAllTasks(db *sql.DB) []Task {
 	results, err := db.Query("SELECT * FROM tasks")
 	if err != nil {
 		panic(err.Error())
 	}
+	count := Count(db)
 	fmt.Printf("\nRetrieved these tasks:\n\n")
+	alltasks := make([]Task, count)
 	for results.Next() {
 		var task Task
 		err = results.Scan(&task.Id, &task.Title, &task.Completed)
@@ -64,8 +85,11 @@ func GetAllTasks(db *sql.DB) {
 			panic(err.Error())
 		}
 		fmt.Println(task.Id, task.Title, task.Completed)
+		alltasks = append(alltasks, task)
+
 	}
 	fmt.Print("\n")
+	return alltasks
 }
 
 func AddTask(db *sql.DB, i *Task) {
