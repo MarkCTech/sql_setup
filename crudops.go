@@ -12,18 +12,18 @@ type Task struct {
 	Completed bool   `json:"completed"`
 }
 
-func Crudin1(CrudDb *sql.DB) {
-	var i Task
-	var r Task
-	InputTask(&i)
-	AddTask(CrudDb, &i)
-	GetTaskbyTitle(CrudDb, &i, &r)
-	ReturnToInput(&r, &i)
-
-	CompleteTask(CrudDb, &i)
-	GetAllTasks(CrudDb)
-	DeleteTask(CrudDb, &i)
-	GetAllTasks(CrudDb)
+func CrudTest(CrudDb *sql.DB) {
+	var testTask Task
+	InputTask(&testTask)
+	AddTask(CrudDb, &testTask)
+	returnedArray := *GetTaskByTitle(CrudDb, &testTask)
+	testTask = returnedArray[0]
+	CompleteTask(CrudDb, &testTask)
+	returnedArray = *GetAllTasks(CrudDb)
+	printArray(returnedArray)
+	DeleteTask(CrudDb, &testTask)
+	returnedArray = *GetAllTasks(CrudDb)
+	printArray(returnedArray)
 }
 
 func InputTask(i *Task) {
@@ -35,6 +35,29 @@ func ReturnToInput(r *Task, i *Task) {
 	i.Id = r.Id
 	i.Title = r.Title
 	i.Completed = r.Completed
+}
+
+func printArray(array []Task) {
+	fmt.Println("printArray: ")
+	for _, task := range array {
+		fmt.Println(task.Id, task.Title, task.Completed)
+	}
+}
+
+func queryToArr(results *sql.Rows) *[]Task {
+	fmt.Printf("\nLog: Added *sql.Rows to array: \n\n")
+	var allTasks []Task
+	for results.Next() {
+		var task Task
+		err := results.Scan(&task.Id, &task.Title, &task.Completed)
+		if err != nil {
+			panic(err.Error())
+		}
+		fmt.Println(task.Id, task.Title, task.Completed)
+		allTasks = append(allTasks, task)
+	}
+	fmt.Print("\n")
+	return &allTasks
 }
 
 func Count(db *sql.DB) int {
@@ -55,40 +78,28 @@ func Count(db *sql.DB) int {
 	return count
 }
 
-func GetTaskbyTitle(db *sql.DB, i *Task, r *Task) {
-	resultId, err := db.Query("SELECT * FROM tasks WHERE title IS NOT NULL AND title = (?)", &i.Title)
+func GetTaskByTitle(db *sql.DB, i *Task) *[]Task {
+	results, err := db.Query("SELECT * FROM tasks WHERE title IS NOT NULL AND title = (?)", &i.Title)
 	if err != nil {
 		panic(err.Error())
 	}
-	for resultId.Next() {
-		err = resultId.Scan(&r.Id, &r.Title, &r.Completed)
-		if err != nil {
-			panic(err.Error())
-		}
-	}
-	fmt.Printf("\nRetrieved these tasks where title is: %s\n\n", i.Title)
-	fmt.Println(r.Id, r.Title, r.Completed)
+	return queryToArr(results)
 }
 
-func GetAllTasks(db *sql.DB) []Task {
+func GetTaskById(db *sql.DB, i *Task) *[]Task {
+	results, err := db.Query("SELECT * FROM tasks WHERE id IS NOT NULL AND id = (?)", &i.Id)
+	if err != nil {
+		panic(err.Error())
+	}
+	return queryToArr(results)
+}
+
+func GetAllTasks(db *sql.DB) *[]Task {
 	results, err := db.Query("SELECT * FROM tasks WHERE id IS NOT NULL")
 	if err != nil {
 		panic(err.Error())
 	}
-	// count := Count(db)
-	fmt.Printf("\nRetrieved these tasks:\n\n")
-	var alltasks []Task
-	for results.Next() {
-		var task Task
-		err = results.Scan(&task.Id, &task.Title, &task.Completed)
-		if err != nil {
-			panic(err.Error())
-		}
-		fmt.Println(task.Id, task.Title, task.Completed)
-		alltasks = append(alltasks, task)
-	}
-	fmt.Print("\n")
-	return alltasks
+	return queryToArr(results)
 }
 
 func AddTask(db *sql.DB, i *Task) {
@@ -106,15 +117,15 @@ func DeleteTask(db *sql.DB, i *Task) {
 		panic(err.Error())
 	}
 	defer delete.Close()
-	fmt.Printf("\nSuccesfully completed task at ID: %v\n", i.Id)
+	fmt.Printf("\nSuccesfully deleted task at ID: %v\n", i.Id)
 }
 
 func CompleteTask(db *sql.DB, i *Task) {
-	i.Completed = true
+	i.Completed = !i.Completed
 	insert, err := db.Query("UPDATE tasks SET completed = (?) WHERE id = (?)", i.Completed, i.Id)
 	if err != nil {
 		panic(err.Error())
 	}
 	defer insert.Close()
-	fmt.Printf("\nSuccesfully completed task at ID: %v\n", i.Id)
+	fmt.Printf("\nSuccesfully updated completion of task at ID: %v\n", i.Id)
 }
